@@ -1,0 +1,145 @@
+
+# Value Iteration Algorithm in Grid World
+
+# Grid size: 4 x 4
+ROWS = 4
+COLS = 4
+
+# Define rewards
+GOAL = (3, 3)
+OBSTACLE = (1, 1)
+
+GAMMA = 0.9
+THETA = 0.001
+
+# Actions
+actions = {
+    "UP": (-1, 0),
+    "DOWN": (1, 0),
+    "LEFT": (0, -1),
+    "RIGHT": (0, 1)
+}
+
+# Initialize values
+V = {}
+for r in range(ROWS):
+    for c in range(COLS):
+        V[(r, c)] = 0.0
+
+# Check valid position
+def valid_state(r, c):
+    return (
+        0 <= r < ROWS and
+        0 <= c < COLS and
+        (r, c) != OBSTACLE
+    )
+
+# Get next state
+def get_next_state(state, action):
+    r, c = state
+    dr, dc = actions[action]
+
+    nr = r + dr
+    nc = c + dc
+
+    if valid_state(nr, nc):
+        return (nr, nc)
+
+    return state
+
+# Reward function
+def get_reward(state):
+    if state == GOAL:
+        return 10
+    return -1
+
+# Value Iteration
+while True:
+    delta = 0
+
+    for state in V:
+        if state == GOAL or state == OBSTACLE:
+            continue
+
+        old_value = V[state]
+        values = []
+
+        for action in actions:
+            next_state = get_next_state(state, action)
+
+            value = (
+                get_reward(next_state) +
+                GAMMA * V[next_state]
+            )
+
+            values.append(value)
+
+        V[state] = max(values)
+
+        delta = max(delta, abs(old_value - V[state]))
+
+    if delta < THETA:
+        break
+
+# Extract optimal policy
+policy = {}
+
+for state in V:
+    if state == GOAL:
+        policy[state] = "G"
+        continue
+
+    if state == OBSTACLE:
+        policy[state] = "#"
+        continue
+
+    best_action = None
+    best_value = float("-inf")
+
+    for action in actions:
+        next_state = get_next_state(state, action)
+
+        value = get_reward(next_state) + GAMMA * V[next_state]
+
+        if value > best_value:
+            best_value = value
+            best_action = action
+
+    policy[state] = best_action
+
+# Display Value Function
+print("VALUE ITERATION - GRID WORLD")
+print("\nValue Function:")
+
+for r in range(ROWS):
+    for c in range(COLS):
+        if (r, c) == OBSTACLE:
+            print("  ### ", end="")
+        else:
+            print("%6.2f" % V[(r, c)], end=" ")
+    print()
+
+# Display Optimal Policy
+print("\nOptimal Policy:")
+print("S = Start, G = Goal, # = Obstacle")
+
+for r in range(ROWS):
+    for c in range(COLS):
+        state = (r, c)
+
+        if state == GOAL:
+            print("  G  ", end="")
+        elif state == OBSTACLE:
+            print("  #  ", end="")
+        else:
+            symbol = {
+                "UP": "^",
+                "DOWN": "v",
+                "LEFT": "<",
+                "RIGHT": ">"
+            }
+            print("  " + symbol[policy[state]] + "  ", end="")
+    print()
+
+print("\nValue Iteration Completed!")
+D
